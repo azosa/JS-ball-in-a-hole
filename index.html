@@ -6,16 +6,78 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <link rel="stylesheet" href="/reset.css">
     <title>Document</title>
+    <style>
+    .modal{
+        width: 100%;
+        height:100%;
+        display: block; 
+    position: fixed; 
+    z-index: 1; 
+    left: 0;
+    top: 0;
+    background-color: rgb(0,0,0); 
+    background-color: rgba(0,0,0,0.4); 
+    }
+.instructions{
+    font-size: 2rem;
+    color:red;
+    margin: 30% auto;
+    width:80%;
+}
+    .btn-cnt{
+        display: flex;
+        justify-content: center;
+
+    }
+    .btn {
+     margin:2rem;
+    color: #aaa;
+    font-size: 28px;
+    font-weight: bold;
+   
+}
+
+.btn:hover,
+.btn:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+    </style>
 </head>
 <body>
     
     <div>
         <canvas id="canvas"></canvas>
       </div>
+      <div class="modal">
+          <div class="instructions">
+ <p>
+   
+ </p>
+      
+          <div class="btn-cnt">
+
+          <button class="btn" >START</button>
+        </div>
+    </div>
+      </div>
 
 
 
 <script>
+    let startTheGame=document.querySelector('.btn');
+    let modal=document.querySelector('.modal');
+    startTheGame.addEventListener('click', function(){
+    
+    modal.style.display = "none";
+    start();
+});
+
+
+
+
 let canvas = document.querySelector('#canvas');
 canvas.setAttribute('width',window.innerWidth);
 canvas.setAttribute('height',window.innerHeight);
@@ -23,26 +85,33 @@ let ctx = canvas.getContext('2d');
 let x = canvas.width/2;
 let y = 50;
 let ballRadius = 20;
+let r=30;
 let obstacles = [];
-
-
-
-
+let stars=[];
+let hx = window.innerWidth/2;
+let hy = window.innerHeight-40;
+let collided=false;
+let time =new Date().getTime();
 drawGame();
 drawHole();
 drawBall();
+ctx.lineWidth=5;
+
+
 
 function drawBall(){
-    let ball=ctx.beginPath();
+  ctx.beginPath();
     ctx.arc(x,y,ballRadius,0,2*Math.PI);
     ctx.fillStyle = "#0095DD";
     ctx.fill();
     ctx.closePath();}
 
 function drawGame(){
+  ctx.fillStyle = 'rgb(235,185,185)';
+ctx.fillRect(0,0,canvas.width, canvas.height);
     obstacles[0]={
         "ctx":ctx,
-        x:12,
+        x:8,
         y:window.innerHeight-window.innerHeight+80,
         width:window.innerWidth/2,
         height:20,
@@ -67,10 +136,76 @@ function drawGame(){
 
 function drawHole(){
     ctx.beginPath();
-    ctx.arc(window.innerWidth/2,window.innerHeight-40,30,0,2*Math.PI);
+    ctx.arc(hx,hy,r,0,2*Math.PI);
     ctx.stroke();
+    ctx.fillStyle='black';
+    ctx.fill();
     ctx.closePath();
+
 }
+
+ function drawStar(sx, sy, spikes, outerRadius, innerRadius,collided) {
+    let rot = Math.PI / 2 * 3;
+    let x = sx;
+    let y = sy;
+    let step = Math.PI / spikes;
+
+    ctx.beginPath();
+    ctx.moveTo(sx, sy - outerRadius)
+    for (i = 0; i < spikes; i++) {
+        x = sx + Math.cos(rot) * outerRadius;
+        y = sy + Math.sin(rot) * outerRadius;
+        ctx.lineTo(x, y)
+        rot += step
+
+        x = sx + Math.cos(rot) * innerRadius;
+        y = sy + Math.sin(rot) * innerRadius;
+        ctx.lineTo(x, y)
+        rot += step
+    }
+    ctx.lineTo(sx, sy - outerRadius)
+
+
+    ctx.closePath();
+    ctx.stroke();
+   
+     if(collided)
+     
+    {ctx.fillStyle='skyblue';}
+
+    else{ctx.fillStyle='red';}
+    ctx.fill();
+
+}
+
+ stars[0]={
+         x:75,
+         y:130,
+         spikes:5,
+         outerRadius:15,
+         innerRadius:8,
+        }
+         stars[1]={
+         x:195,
+         y:260,
+         spikes:5,
+         outerRadius:15,
+         innerRadius:8,
+        }
+         stars[2]={
+         x:370,
+         y:550,
+         spikes:5,
+         outerRadius:15,
+         innerRadius:8,
+        }
+ function drawStars(){
+
+         for(let i=0;i<stars.length;i++){
+         drawStar(stars[i].x, stars[i].y, stars[i].spikes, stars[i].outerRadius, stars[i].innerRadius,stars[i].collided);
+    }
+
+}   
   
 
 function roundedRect(ctx,x,y,width,height,radius){
@@ -88,48 +223,111 @@ function roundedRect(ctx,x,y,width,height,radius){
   ctx.closePath();
 }
 
+function ballinHole(x, y, ballRadius, hx, hy, r) {
+  let distX = x - hx;
+  let distY = y - hy;
+  let distance =Math.sqrt( (distX*distX) + (distY*distY) );
+
+  if (distance <= ballRadius) {
+    return true;
+  }
+  else {
+    return false;
+  }
+}
+function animation() {
+       
+       if(ballRadius>0){
+           ballRadius= ballRadius-1;
+       requestAnimationFrame(animation);} 
+       else ballRadius=0;
+       }
+
+
+       function getEndTime(){
+        let time2 =new Date().getTime();
+    let gameDur=Math.round((time2-time)/1000);
+    console.log(time2);
+    console.log(`it took ${gameDur} seconds`);
+    
+       }
+
+function start(){
 
 
 window.addEventListener('deviceorientation',moveMe)
 
 function moveMe(event){
-    console.log(event.alpha);
-      let dz= Math.round(event.alpha);  //zakres 0-360
-      let dy= Math.round(event.beta);  // zakres -180 do 180
-      let dx= Math.round(event.gamma); //zakres -90 do 90
+ 
+      let dz= Math.round(event.alpha)*0.07;  //zakres 0-360
+      let dy= Math.round(event.beta)*0.07;  // zakres -180 do 180
+      let dx= Math.round(event.gamma)*0.07; //zakres -90 do 90
+     
       
+     
  draw();
 
  function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-drawGame();
-drawHole();
-   drawBall();
-   if(x + dx > canvas.width-ballRadius || x + dx < ballRadius) {
+    drawGame();
+    drawHole(); 
+    drawStars();
+    drawBall();
+   
+
+   //wall collision detection
+   if(x +dx > canvas.width-ballRadius || x +dx<ballRadius) {
         dx = -dx;
     }
-    if(y + dy > canvas.height-ballRadius || y + dy < ballRadius) {
+    if(y +dy> canvas.height-ballRadius || y +dy< ballRadius) {
         dy = -dy;
     }
-
-
+  
+//obstacles collision detection
 for(let i=0;i<obstacles.length;i++){
-   if(x > obstacles[i].x && x < obstacles[i].x+obstacles[i].width && y > obstacles[i].y && y < obstacles[i].y+obstacles[i].height) {
-          dy = -dy;}}
+   if(x< obstacles[i].x+obstacles[i].width && 
+   x+ballRadius > obstacles[i].x && 
+   y+ballRadius > obstacles[i].y && 
+   y-ballRadius< obstacles[i].y+obstacles[i].height) {
+          dy = -dy;
+          }
+
+}
+
+
+//stars collision detection
+for(let i=0;i<stars.length;i++){
+   if(x< stars[i].x&& 
+   x+ballRadius > stars[i].x && 
+   y+ballRadius > stars[i].y && 
+   y-ballRadius< stars[i].y) {
+   stars[i].collided="true";
+          }
+       
+
+}
 
 
 
+//hole collision detection
+if (ballinHole(x,y,ballRadius,hx,hy,r))
+{  
+     
+    getEndTime();
+    animation();
+ 
+}
 
-   x += dx*0.1;
-   y += dy*0.1;
+
+   x += dx;
+   y += dy;
+  
+}
+
+
 
 }
 }
-
-
-
-
-
 
 
 
