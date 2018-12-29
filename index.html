@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="/reset.css">
+    <title>Document</title>
+</head>
+<body>
+    
+    <div>
+        <canvas id="canvas"></canvas>
+      </div>
+
+
+
+<script>
+let canvas = document.querySelector('#canvas');
+canvas.setAttribute('width',window.innerWidth);
+canvas.setAttribute('height',window.innerHeight);
+let ctx = canvas.getContext('2d');
+let x = canvas.width/2;
+let y = 50;
+let ballRadius = 20;
+let obstacles = [];
+
+
+
+
+drawGame();
+drawHole();
+drawBall();
+
+function drawBall(){
+    let ball=ctx.beginPath();
+    ctx.arc(x,y,ballRadius,0,2*Math.PI);
+    ctx.fillStyle = "#0095DD";
+    ctx.fill();
+    ctx.closePath();}
+
+function drawGame(){
+    obstacles[0]={
+        "ctx":ctx,
+        x:12,
+        y:window.innerHeight-window.innerHeight+80,
+        width:window.innerWidth/2,
+        height:20,
+        radius:10
+    }
+    obstacles[1]={
+        "ctx":ctx,
+        x:window.innerWidth-window.innerWidth+70,
+        y:window.innerHeight-window.innerHeight+150,
+        width:window.innerWidth-70,
+        height:20,
+        radius:10
+    }
+
+    for(let i=0;i<obstacles.length;i++){
+          roundedRect(obstacles[i].ctx, obstacles[i].x, obstacles[i].y, obstacles[i].width, obstacles[i].height, obstacles[i].radius);
+
+    }
+   
+   
+}
+
+function drawHole(){
+    ctx.beginPath();
+    ctx.arc(window.innerWidth/2,window.innerHeight-40,30,0,2*Math.PI);
+    ctx.stroke();
+    ctx.closePath();
+}
+  
+
+function roundedRect(ctx,x,y,width,height,radius){
+  ctx.beginPath();
+  ctx.moveTo(x,y+radius);
+  ctx.lineTo(x,y+height-radius);
+  ctx.arcTo(x,y+height,x+radius,y+height,radius);
+  ctx.lineTo(x+width-radius,y+height);
+  ctx.arcTo(x+width,y+height,x+width,y+height-radius,radius);
+  ctx.lineTo(x+width,y+radius);
+  ctx.arcTo(x+width,y,x+width-radius,y,radius);
+  ctx.lineTo(x+radius,y);
+  ctx.arcTo(x,y,x,y+radius,radius);
+  ctx.stroke();
+  ctx.closePath();
+}
+
+
+
+window.addEventListener('deviceorientation',moveMe)
+
+function moveMe(event){
+    console.log(event.alpha);
+      let dz= Math.round(event.alpha);  //zakres 0-360
+      let dy= Math.round(event.beta);  // zakres -180 do 180
+      let dx= Math.round(event.gamma); //zakres -90 do 90
+      
+ draw();
+
+ function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+drawGame();
+drawHole();
+   drawBall();
+   if(x + dx > canvas.width-ballRadius || x + dx < ballRadius) {
+        dx = -dx;
+    }
+    if(y + dy > canvas.height-ballRadius || y + dy < ballRadius) {
+        dy = -dy;
+    }
+
+
+for(let i=0;i<obstacles.length;i++){
+   if(x > obstacles[i].x && x < obstacles[i].x+obstacles[i].width && y > obstacles[i].y && y < obstacles[i].y+obstacles[i].height) {
+          dy = -dy;}}
+
+
+
+
+   x += dx*0.1;
+   y += dy*0.1;
+
+}
+}
+
+
+
+
+
+
+
+
+</script>
+</body>
+</html>
